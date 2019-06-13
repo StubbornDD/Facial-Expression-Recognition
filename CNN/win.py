@@ -8,38 +8,39 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 import load_meta_cnn as detect
 
 class Frame(wx.Frame):
+    #界面框架初始化
     def __init__(self):
         wx.Frame.__init__(self,parent=None,title="人脸表情识别系统",size=(1400,1200))
         self.locale = wx.Locale(wx.LANGUAGE_ENGLISH)
-
-        self.grid_sizer=wx.GridBagSizer(0,0)
+        #使用GridBagSizer布局管理部件进行框架布局
+        self.grid_sizer=wx.GridBagSizer(0,0)  
 
         self.filename='../other/default.png'
-
+        #显示标题面板
         self.panel_top=wx.Panel(self)
         self.panel_top.SetMinSize((700,200))
         self.grid_sizer.Add(self.panel_top,pos=(0,0),span=(1,2),flag=wx.EXPAND)
         self.img_top=wx.Image('../other/title.jpg',wx.BITMAP_TYPE_ANY).Scale(1400, 200)
         wx.StaticBitmap(self.panel_top,pos=(0,0),bitmap=wx.Bitmap(self.img_top))
-
+        #显示图片展示面板
         self.panel_img=wx.Panel(self)
         self.panel_img.SetMinSize((700,350))
         self.grid_sizer.Add(self.panel_img,pos=(1,0),span=(1,1),flag=wx.EXPAND)
         self.setImage(self.filename,'0')
 ##        self.img_default=wx.Image('../temp/default.png',wx.BITMAP_TYPE_ANY)
 ##        wx.StaticBitmap(self.panel_left,pos=(100,50),bitmap=wx.Bitmap(self.img_default))
-
+        #显示按钮面板
         self.panel_btn=wx.Panel(self)
         self.panel_btn.SetMinSize((700,150))
         self.grid_sizer.Add(self.panel_btn,pos=(2,0),span=(1,1),flag=wx.EXPAND)
-        
+        #位图按钮
         self.up=wx.Image('../other/up.png',wx.BITMAP_TYPE_ANY).ConvertToBitmap()
         self.upBtn=wx.BitmapButton(self.panel_btn,-1,self.up,pos=(150,50))
         self.upBtn.Bind(wx.EVT_BUTTON,self.upBtnEvent)
         self.start=wx.Image('../other/start.png',wx.BITMAP_TYPE_ANY).ConvertToBitmap()
         self.startBtn=wx.BitmapButton(self.panel_btn,-1,self.start,pos=(400,50))
         self.startBtn.Bind(wx.EVT_BUTTON,self.startBtnEvent)
-        
+        #显示条形图面板
         self.panel_right=wx.Panel(self)
         self.panel_right.SetMinSize((700,500))
         self.grid_sizer.Add(self.panel_right,pos=(1,1),span=(2,1),flag=wx.EXPAND)
@@ -49,6 +50,7 @@ class Frame(wx.Frame):
         self.SetSizer(self.grid_sizer)
         self.Fit()
 
+    #显示图片，flag表示是否为默认图片
     def setImage(self,path,flag):
         self.img_default=wx.Image(path,wx.BITMAP_TYPE_ANY).Rescale(500,300).ConvertToBitmap()
 
@@ -62,13 +64,15 @@ class Frame(wx.Frame):
         else:
             self.img.SetBitmap(wx.Bitmap(self.img_default))
 
+    #上传图片按钮事件，点击后弹出文件对话框，获取所选图片的路径
     def upBtnEvent(self,event):
         dlg=wx.FileDialog(self, message="Choose a file", defaultDir='../other',defaultFile='',style=wx.FD_OPEN, wildcard="*.*",pos=wx.DefaultPosition)
         if dlg.ShowModal()==wx.ID_OK:
             self.filename=dlg.GetPath()
             self.setImage(self.filename,'1')
             print(self.filename)
-        
+
+    #开始检测按钮事件，点击后调用load_meta_cnn进行识别检测并展示结果   
     def startBtnEvent(self,event):
         if detect.main(self.filename):
             #wx.ProgressDialog(title='检测中', message='waiting...', maximum=100, parent=self,style=wx.PD_CAN_ABORT)
@@ -79,7 +83,7 @@ class Frame(wx.Frame):
             self.setPlot(self.y)
             self.setImage('../other/cv/pic/test.jpg','1')
 
-
+    #显示条形图
     def setPlot(self,y=[1,1,1,1,1,1,1]):
         self.fig,self.axe=plt.subplots()
         self.canvas=FigureCanvasWxAgg(self.panel_right,-1,self.fig)

@@ -42,7 +42,7 @@ x_input = graph.get_tensor_by_name('x_input:0')
 dropout = graph.get_tensor_by_name('dropout:0')
 logits = graph.get_tensor_by_name('project/output/logits:0')
 
-
+#图像优化
 def advance_image(images_):
     rsz_img = []
     rsz_imgs = []
@@ -61,7 +61,7 @@ def advance_image(images_):
     rsz_imgs.append(np.array(rsz_img))
     return rsz_imgs
 
-
+#进行人脸识别（单脸）
 def produce_result(images_):
     images_ = np.multiply(np.array(images_), 1. / 255)
     if use_advanced_method:
@@ -73,7 +73,7 @@ def produce_result(images_):
         pred_logits_.append(sess.run(tf.nn.softmax(logits), {x_input: rsz_img, dropout: 1.0}))
     return np.sum(pred_logits_, axis=0)
 
-
+#进行人脸识别（多脸）
 def produce_results(images_):
     results = []
     pred_logits_ = produce_result(images_)
@@ -83,7 +83,7 @@ def produce_results(images_):
     result_decimals = np.around(np.array(results) / len(images_), decimals=3)
     return results, result_decimals
 
-
+#创建混淆矩阵
 def produce_confusion_matrix(images_list_, total_num_):
     total = []
     total_decimals = []
@@ -100,13 +100,13 @@ def produce_confusion_matrix(images_list_, total_num_):
     print('acc: {:.3f} %'.format(sum * 100. / total_num_))
     print('Using ', ckpt_name)
 
-
+#转换图片为48*48
 def predict_emotion(image_):
     image_ = cv2.resize(image_, (default_height, default_width))
     image_ = np.reshape(image_, [-1, default_height, default_width, channel])
     return produce_result(image_)[0]
 
-
+#识别人脸并转化为灰度图像
 def face_detect(image_path, casc_path_=casc_path):
     if os.path.isfile(casc_path_):
         face_casccade_ = cv2.CascadeClassifier(casc_path_)
@@ -128,7 +128,7 @@ def main(path):
     if not confusion_matrix:
         image=path
         print(image+'\n')
-        faces, img_gray, img = face_detect(image)
+        faces, img_gray, img = face_detect(image)  #识别人脸并转化为灰度图像
         spb = img.shape
         sp = img_gray.shape
         height = sp[0]
@@ -152,7 +152,7 @@ def main(path):
             with open('../other/cv/1.txt', 'w') as f:
                 f.write(str(emotion_pre_dict)+'\n')
                 f.write(str('Emotion : '+str(emo)))
-            
+            #将所有情绪概率存入文件中，以便后期可视化
             t_size = 2
             ww = int(spb[0] * t_size / 300)
             www = int((w + 10) * t_size / 100)
@@ -160,11 +160,12 @@ def main(path):
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 0, 255), ww)
             cv2.putText(img, emo, (x + 2, y + h - 2), cv2.FONT_HERSHEY_SIMPLEX,
                         www_s, (255, 0, 255), thickness=www, lineType=1)
+            #框出人脸并将最大概率的情绪名称注明在图像上
             # img_gray full face     face_img_gray part of face
         if face_exists:
             cv2.imwrite('../other/cv/pic/test.jpg',img,[int(cv2.IMWRITE_JPEG_QUALITY),70])
             return True
-
+            #将识别处理后的图像保存，以便后期显示在系统界面上
 
     if confusion_matrix:
         with open(csv_path, 'r') as f:
